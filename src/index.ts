@@ -2,7 +2,7 @@ import YNEvents from '@yesness/events';
 import toBuffer from 'typedarray-to-buffer';
 
 export interface IYNSocket {
-    send(data: Buffer): void;
+    send(data: Buffer | string): void;
     close(): void;
     on(event: 'data', listener: (data: Buffer) => void): void;
     on(event: 'close', listener: () => void): void;
@@ -25,8 +25,8 @@ interface IWebSocket {
 export default class YNSocket extends YNEvents implements IYNSocket {
     static ws(ws: IWebSocket): IYNSocket {
         const socket = new YNSocket({
-            send(data: Buffer) {
-                ws.send(data);
+            send(data: Buffer | string) {
+                ws.send(YNSocket._convertData(data));
             },
             close() {
                 ws.close();
@@ -55,14 +55,14 @@ export default class YNSocket extends YNEvents implements IYNSocket {
 
     private constructor(
         private callbacks: {
-            send(data: Buffer): void;
+            send(data: Buffer | string): void;
             close(): void;
         }
     ) {
         super();
     }
 
-    send(data: Buffer) {
+    send(data: Buffer | string) {
         this.callbacks.send(data);
     }
 

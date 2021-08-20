@@ -20,7 +20,8 @@
         "url": "git+https://github.com/yesness/socket.git"
     },
     "keywords": [
-        "netclass"
+        "socket",
+        "ynsocket"
     ],
     "author": "rcpooley",
     "license": "ISC",
