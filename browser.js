@@ -1,2 +1,2 @@
-const YNSocket = require('./lib/index');
-module.exports = YNSocket.default;
+const index = require('./lib/index');
+module.exports = index.default;
