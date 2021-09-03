@@ -1,5 +1,4 @@
 import YNEvents from '@yesness/events';
-import toBuffer from 'typedarray-to-buffer';
 
 export interface IYNSocket {
     send(data: Buffer | string): void;
@@ -26,14 +25,16 @@ export default class YNSocket extends YNEvents implements IYNSocket {
     static ws(ws: IWebSocket): IYNSocket {
         const socket = new YNSocket({
             send(data: Buffer | string) {
-                ws.send(YNSocket._convertData(data));
+                YNSocket._convertData(data).then((buffer) => ws.send(buffer));
             },
             close() {
                 ws.close();
             },
         });
         ws.addEventListener('message', ({ data }) => {
-            socket.emit('data', YNSocket._convertData(data));
+            YNSocket._convertData(data).then((buffer) =>
+                socket.emit('data', buffer)
+            );
         });
         ws.addEventListener('close', () => {
             socket.emit('close');
@@ -41,15 +42,20 @@ export default class YNSocket extends YNEvents implements IYNSocket {
         return socket;
     }
 
-    private static _convertData(data: any): Buffer {
+    private static async _convertData(data: any): Promise<Buffer> {
+        if (typeof Blob === 'function' && data instanceof Blob) {
+            data = await data.arrayBuffer();
+        }
         if (typeof data === 'string') {
             return Buffer.from(data);
-        } else if (data instanceof Uint8Array) {
-            return toBuffer(data);
+        } else if (data instanceof Uint8Array || data instanceof ArrayBuffer) {
+            return ArrayBuffer.isView(data)
+                ? Buffer.from(data.buffer, data.byteOffset, data.byteLength)
+                : Buffer.from(data);
         } else if (data instanceof Buffer) {
             return data;
         }
-
+        console.log('DATA', data);
         throw new Error(`Unexpected data of type ${typeof data}: ${data}`);
     }
 
